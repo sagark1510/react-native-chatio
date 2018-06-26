@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { View, Dimensions, StyleSheet, Image, Platform } from 'react-native';
 import PropTypes from 'prop-types';
-import { AuthWebView } from '@livechat/chat.io-customer-auth'
-import { init } from '@livechat/chat.io-customer-sdk'
+import { AuthWebView } from '@livechat/chat.io-customer-auth';
+import { init } from '@livechat/chat.io-customer-sdk';
 import ChatBubble from './ChatBubble/ChatBubble';
 import Chat from './Chat/Chat';
 
@@ -17,7 +17,9 @@ export default class ChatIO extends Component {
     this.state = {
       isChatOn: false,
       isConnected: false,
-      bubble: props.bubble ? props.bubble : (
+      bubble: props.bubble ? (
+        props.bubble
+      ) : (
         <View style={this.styles.bubbleStyle}>
           <Image source={chatIcon} style={this.styles.icon} />
         </View>
@@ -48,10 +50,11 @@ export default class ChatIO extends Component {
         justifyContent: 'center',
       },
       icon: {
-        width: width / 7, height: width / 7,
+        width: width / 7,
+        height: width / 7,
       },
       container: {
-        position: 'absolute',
+        flex: 1,
       },
     });
   }
@@ -61,7 +64,9 @@ export default class ChatIO extends Component {
       this.chat.startChat();
       this.setState({ isChatOn: true });
     } else {
-      console.warn('Connection with Chat.io failed. Please check your implementation.');
+      console.warn(
+        'Connection with Chat.io failed. Please check your implementation.',
+      );
     }
   };
 
@@ -69,7 +74,7 @@ export default class ChatIO extends Component {
     this.setState({ isChatOn: false });
   };
 
-  getChatId = (id) => {
+  getChatId = id => {
     this.props.onChatStarted(id);
   };
 
@@ -77,19 +82,23 @@ export default class ChatIO extends Component {
     return (
       <View style={this.styles.container}>
         <AuthWebView />
-        {this.state.isConnected ? <ChatBubble
-          left={this.props.bubbleLeft}
-          top={this.props.bubbleTop}
-          openChat={this.openChat}
-          bubble={this.state.bubble}
-          disabled={this.props.movable}
-        /> : null}
+        {this.state.isConnected && this.props.showBubble ? (
+          <ChatBubble
+            left={this.props.bubbleLeft}
+            top={this.props.bubbleTop}
+            openChat={this.openChat}
+            bubble={this.state.bubble}
+            disabled={this.props.movable}
+          />
+        ) : null}
         <Chat
           {...this.props}
           isChatOn={this.state.isChatOn}
           closeChat={this.closeChat}
           returnChatId={this.getChatId}
-          ref={(ref) => { this.chat = ref; }}
+          ref={ref => {
+            this.chat = ref;
+          }}
         />
       </View>
     );
@@ -110,6 +119,9 @@ ChatIO.propTypes = {
   noAgents: PropTypes.string,
   onLoaded: PropTypes.func,
   onChatStarted: PropTypes.func,
+  chatAnimation: PropTypes.string,
+  showNavigationBar: PropTypes.bool,
+  showBubble: PropTypes.bool,
 };
 
 ChatIO.defaultProps = {
@@ -117,9 +129,15 @@ ChatIO.defaultProps = {
   onLoaded: () => {},
   onChatStarted: () => {},
   movable: true,
-  bubbleLeft: width - (width / 5) - (width / 50),
-  bubbleTop: Platform.OS === 'ios' ? height - (width / 5) - (width / 50) : height - (width / 5) - (width / 13),
+  bubbleLeft: width - width / 5 - width / 50,
+  bubbleTop:
+    Platform.OS === 'ios'
+      ? height - width / 5 - width / 50
+      : height - width / 5 - width / 13,
   chatTitle: 'Chat with us!',
   greeting: 'Welcome to Chat.io!\nHow may We help you?',
   noAgents: 'Our agents are not available right now.',
+  chatAnimation: null,
+  showNavigationBar: false,
+  showBubble: false,
 };

@@ -6,7 +6,8 @@ import { GiftedChat } from 'react-native-gifted-chat';
 import NavigationBar from './NavigationBar/NavigationBar';
 
 const { height, width } = Dimensions.get('window');
-const totalSize = num => (Math.sqrt((height * height) + (width * width)) * num) / 100;
+const totalSize = num =>
+  (Math.sqrt(height * height + width * width) * num) / 100;
 
 export default class Chat extends React.Component {
   constructor(props) {
@@ -23,66 +24,86 @@ export default class Chat extends React.Component {
   setListeners = () => {
     GLOBAL.customerSDK.on('new_event', this.handleNewMessage.bind(this));
     GLOBAL.customerSDK.on('user_is_typing', this.agentIsTyping.bind(this));
-    GLOBAL.customerSDK.on('user_stopped_typing', this.agentStopsTyping.bind(this));
+    GLOBAL.customerSDK.on(
+      'user_stopped_typing',
+      this.agentStopsTyping.bind(this),
+    );
   };
 
   startChat = () => {
     if (!this.state.isChatOn) {
-      GLOBAL.customerSDK.startChat()
-        .then((chat) => {
+      GLOBAL.customerSDK
+        .startChat()
+        .then(chat => {
           if (chat.users.length >= 2) {
             this.setListeners();
             this.props.returnChatId(chat.id);
-            this.setState({ onlineStatus: true, isChatOn: true, chatId: chat.id });
+            this.setState({
+              onlineStatus: true,
+              isChatOn: true,
+              chatId: chat.id,
+            });
           } else {
-            this.setState({ onlineStatus: false, isChatOn: false, chatId: null });
+            this.setState({
+              onlineStatus: false,
+              isChatOn: false,
+              chatId: null,
+            });
           }
         })
-        .catch((error) => {
+        .catch(error => {
           this.setState({ onlineStatus: false, isChatOn: false, chatId: null });
           console.warn(error);
         });
     }
   };
 
-  handleNewMessage = (newMessage) => {
+  handleNewMessage = newMessage => {
     if (newMessage.event.type === 'message') this.addMessage(newMessage.event);
   };
 
-  addMessage = (message) => {
+  addMessage = message => {
     if (message.id) {
       this.setState({
         typingText: null,
-        messages: [{
-          text: message.text,
-          _id: message.id,
-          createdAt: message.timestamp,
-          user: { id: message.author },
-        }, ...this.state.messages],
+        messages: [
+          {
+            text: message.text,
+            _id: message.id,
+            createdAt: message.timestamp,
+            user: { id: message.author },
+          },
+          ...this.state.messages,
+        ],
       });
     } else {
       this.setState({
-        messages: [{
-          text: message.text,
-          _id: message._id,
-          createdAt: message.createdAt,
-          user: message.user,
-        }, ...this.state.messages],
+        messages: [
+          {
+            text: message.text,
+            _id: message._id,
+            createdAt: message.createdAt,
+            user: message.user,
+          },
+          ...this.state.messages,
+        ],
       });
     }
   };
 
-  handleInputTextChange = (text) => {
-    if (this.state.chatId) GLOBAL.customerSDK.setSneakPeek(this.state.chatId, text);
+  handleInputTextChange = text => {
+    if (this.state.chatId)
+      GLOBAL.customerSDK.setSneakPeek(this.state.chatId, text);
   };
 
-  handleSend = (messages) => {
+  handleSend = messages => {
     GLOBAL.customerSDK.sendMessage(this.state.chatId, messages[0]);
     this.addMessage(messages[0]);
   };
 
   agentIsTyping = () => {
-    if (!this.state.typingText) this.setState({ typingText: 'Agent is typing...' });
+    if (!this.state.typingText)
+      this.setState({ typingText: 'Agent is typing...' });
   };
 
   agentStopsTyping = () => {
@@ -99,9 +120,7 @@ export default class Chat extends React.Component {
     if (this.state.typingText) {
       return (
         <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>
-            {this.state.typingText}
-          </Text>
+          <Text style={styles.footerText}>{this.state.typingText}</Text>
         </View>
       );
     }
@@ -110,15 +129,27 @@ export default class Chat extends React.Component {
 
   render() {
     if (this.props.isChatOn) {
+      const props = this.props.chatAnimation
+        ? { animation: this.props.chatAnimation }
+        : {};
       return (
         <View
-          animation="lightSpeedIn"
           style={styles.container}
-          ref={(ref) => { this.chat = ref; }}
+          ref={ref => {
+            this.chat = ref;
+          }}
+          {...props}
         >
-          <NavigationBar chatTitle={this.props.chatTitle} closeChat={this.closeChat} />
+          {this.props.showNavigationBar ? (
+            <NavigationBar
+              chatTitle={this.props.chatTitle}
+              closeChat={this.closeChat}
+            />
+          ) : null}
           <Text style={styles.status}>
-            { this.state.onlineStatus ? this.props.greeting : this.props.noAgents }
+            {this.state.onlineStatus
+              ? this.props.greeting
+              : this.props.noAgents}
           </Text>
           <GiftedChat
             messages={this.state.messages}
@@ -148,16 +179,8 @@ Chat.propTypes = {
 };
 
 const styles = StyleSheet.create({
-  hide: {
-    width: 0,
-    height: 0,
-    position: 'absolute',
-  },
   container: {
-    width,
-    height: Platform.OS === 'ios' ? height : height - (height / 25),
-    position: 'absolute',
-    flexDirection: 'column',
+    flex: 1,
     backgroundColor: '#fff',
   },
   navigation: {
