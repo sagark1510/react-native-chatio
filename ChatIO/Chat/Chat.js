@@ -151,17 +151,19 @@ export default class Chat extends React.Component {
               ? this.props.greeting
               : this.props.noAgents}
           </Text>
-          <GiftedChat
-            messages={this.state.messages}
-            renderFooter={this.renderFooter}
-            onSend={this.handleSend}
-            renderAvatar={null}
-            onInputTextChanged={this.handleInputTextChange}
-            user={{
-              _id: 1,
-            }}
-            {...this.props}
-          />
+          <View style={{ flex: 1 }}>
+            <GiftedChat
+              messages={this.state.messages}
+              renderFooter={this.renderFooter}
+              onSend={this.handleSend}
+              renderAvatar={null}
+              onInputTextChanged={this.handleInputTextChange}
+              user={{
+                _id: 1,
+              }}
+              {...this.props}
+            />
+          </View>
         </View>
       );
     }
