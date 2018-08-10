@@ -1,14 +1,14 @@
-import React, { Component } from 'react';
-import { View, Dimensions, StyleSheet, Image, Platform } from 'react-native';
+import React, {Component} from 'react';
+import {View, Dimensions, StyleSheet, Image, Platform} from 'react-native';
 import PropTypes from 'prop-types';
-import { AuthWebView } from '@livechat/chat.io-customer-auth';
-import { init } from '@livechat/chat.io-customer-sdk';
+import {AuthWebView} from '@livechat/chat.io-customer-auth';
+import {init} from '@livechat/chat.io-customer-sdk';
 import ChatBubble from './ChatBubble/ChatBubble';
 import Chat from './Chat/Chat';
 
 const chatIcon = require('../assets/chat.png');
 
-const { height, width } = Dimensions.get('window');
+const {height, width} = Dimensions.get('window');
 
 export default class ChatIO extends Component {
   constructor(props) {
@@ -17,6 +17,7 @@ export default class ChatIO extends Component {
     this.state = {
       isChatOn: false,
       isConnected: false,
+      chatHeight: height - 150,
       bubble: props.bubble ? (
         props.bubble
       ) : (
@@ -34,7 +35,7 @@ export default class ChatIO extends Component {
       });
     }
     GLOBAL.customerSDK.on('connected', () => {
-      this.setState({ isConnected: true });
+      this.setState({isConnected: true});
       props.onLoaded(GLOBAL.customerSDK);
     });
   }
@@ -62,7 +63,7 @@ export default class ChatIO extends Component {
   openChat = () => {
     if (this.state.isConnected) {
       this.chat.startChat();
-      this.setState({ isChatOn: true });
+      this.setState({isChatOn: true});
     } else {
       console.warn(
         'Connection with Chat.io failed. Please check your implementation.',
@@ -71,16 +72,25 @@ export default class ChatIO extends Component {
   };
 
   closeChat = () => {
-    this.setState({ isChatOn: false });
+    this.setState({isChatOn: false});
   };
 
   getChatId = id => {
     this.props.onChatStarted(id);
   };
 
+  onContainerLayout = e => {
+    const {
+      nativeEvent: {
+        layout: {height: h},
+      },
+    } = e;
+    this.setState({chatHeight: h});
+  };
+
   render() {
     return (
-      <View style={this.styles.container}>
+      <View style={this.styles.container} onLayout={this.onContainerLayout}>
         <AuthWebView />
         {this.state.isConnected && this.props.showBubble ? (
           <ChatBubble
@@ -91,15 +101,17 @@ export default class ChatIO extends Component {
             disabled={this.props.movable}
           />
         ) : null}
-        <Chat
-          {...this.props}
-          isChatOn={this.state.isChatOn}
-          closeChat={this.closeChat}
-          returnChatId={this.getChatId}
-          ref={ref => {
-            this.chat = ref;
-          }}
-        />
+        <View style={{flex: 1, minHeight: this.state.chatHeight}}>
+          <Chat
+            {...this.props}
+            isChatOn={this.state.isChatOn}
+            closeChat={this.closeChat}
+            returnChatId={this.getChatId}
+            ref={ref => {
+              this.chat = ref;
+            }}
+          />
+        </View>
       </View>
     );
   }
